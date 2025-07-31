@@ -1,11 +1,12 @@
-# 🚀 Deployment Guide for Hugging Face Spaces
+# 🚀 Deployment Guide for Hugging Face Spaces (Docker)
 
 ## Overview
-This guide walks you through deploying your Age Detection App to Hugging Face Spaces.
+This guide walks you through deploying your Age Detection App to Hugging Face Spaces using Docker for better control over dependencies and environment.
 
 ## Prerequisites
 1. **Hugging Face Account**: Create a free account at [huggingface.co](https://huggingface.co)
 2. **Git**: Ensure Git is installed on your system
+3. **Docker** (optional, for local testing): Install Docker Desktop
 
 ## Step-by-Step Deployment
 
@@ -15,8 +16,8 @@ This guide walks you through deploying your Age Detection App to Hugging Face Sp
 3. Fill in the details:
    - **Space name**: `age-detection-app` (or your preferred name)
    - **License**: MIT
-   - **SDK**: Streamlit
-   - **Hardware**: CPU Basic (free tier)
+   - **SDK**: Docker
+   - **Hardware**: CPU Basic (free tier) or CPU Upgrade for better performance
    - **Visibility**: Public (or Private if preferred)
 
 ### 2. Clone Your New Space Repository
@@ -27,12 +28,36 @@ cd age-detection-app
 
 ### 3. Copy Your Files
 Copy all files from this repository to your new space repository:
-- `app.py`
-- `requirements.txt`
-- `packages.txt`
-- `README.md`
-- `.gitignore`
-- `test_setup.py`
+- `app.py` - Main Streamlit application
+- `requirements.txt` - Python dependencies
+- `Dockerfile` - Docker configuration
+- `.dockerignore` - Docker ignore patterns
+- `start.sh` - Startup script
+- `README.md` - Documentation with HF Spaces metadata
+- `.gitignore` - Git ignore patterns
+- `test_setup.py` - Dependency testing script
+
+### 4. Push to Hugging Face
+```bash
+git add .
+git commit -m "Deploy age detection app to Hugging Face Spaces with Docker"
+git push origin main
+```
+
+## 🐳 Docker Configuration
+
+### Dockerfile Features
+- **Base Image**: Python 3.9 slim for optimal size
+- **System Dependencies**: All required libraries for OpenCV and InsightFace
+- **Security**: Non-root user execution
+- **Health Check**: Automatic service monitoring
+- **Optimized Caching**: Efficient layer caching for faster builds
+
+### Key Docker Benefits
+1. **Consistent Environment**: Same environment across development and production
+2. **Better Dependency Management**: System-level package control
+3. **Improved Performance**: Optimized for InsightFace and OpenCV
+4. **Easier Debugging**: More control over the runtime environment
 
 ### 4. Push to Hugging Face
 ```bash
@@ -45,11 +70,13 @@ git push origin main
 
 ### Core Files
 - **`app.py`**: Main Streamlit application
-- **`requirements.txt`**: Python dependencies
-- **`packages.txt`**: System dependencies (for Ubuntu)
+- **`requirements.txt`**: Python dependencies with specific versions
+- **`Dockerfile`**: Docker container configuration
+- **`start.sh`**: Startup script with optimized settings
 - **`README.md`**: Documentation with HF Spaces metadata
 
-### Additional Files
+### Configuration Files
+- **`.dockerignore`**: Docker build optimization
 - **`.gitignore`**: Git ignore patterns
 - **`test_setup.py`**: Dependency testing script
 
@@ -62,9 +89,8 @@ title: Age Detection App
 emoji: 👥
 colorFrom: blue
 colorTo: green
-sdk: streamlit
-sdk_version: 1.45.1
-app_file: app.py
+sdk: docker
+app_port: 7860
 pinned: false
 license: mit
 short_description: AI-powered face age detection and analysis using InsightFace
@@ -84,11 +110,35 @@ tags:
 - **NumPy, Pandas**: Data processing
 - **Pillow**: Image handling
 
-### System Packages (packages.txt)
+### System Packages (Docker)
+The Dockerfile automatically installs:
 - **ffmpeg**: Video/audio processing
 - **libsm6, libxext6**: X11 libraries
 - **libfontconfig1, libxrender1**: Font and rendering
 - **libgl1-mesa-glx**: OpenGL support
+- **Additional libraries**: For complete OpenCV and InsightFace support
+
+## 🧪 Local Testing with Docker
+
+### Build and Run Locally
+```bash
+# Build the Docker image
+docker build -t age-detection-app .
+
+# Run the container
+docker run -p 7860:7860 age-detection-app
+
+# Access the app at http://localhost:7860
+```
+
+### Debug Container
+```bash
+# Run interactively for debugging
+docker run -it --entrypoint /bin/bash age-detection-app
+
+# Check logs
+docker logs <container_id>
+```
 
 ## 🎯 Expected Behavior
 

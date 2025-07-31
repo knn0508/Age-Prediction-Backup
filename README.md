@@ -3,9 +3,8 @@ title: Age Detection App
 emoji: 👥
 colorFrom: blue
 colorTo: green
-sdk: streamlit
-sdk_version: 1.45.1
-app_file: app.py
+sdk: docker
+app_port: 7860
 pinned: false
 license: mit
 short_description: AI-powered face age detection and analysis using InsightFace
