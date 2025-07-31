@@ -82,28 +82,24 @@ PROCESS_EVERY_N_FRAMES = 3
 def is_deployed_environment():
     """Detect if running in a deployed environment"""
     deployment_indicators = [
-        # Streamlit Cloud / Hugging Face Spaces
+        # Hugging Face Spaces
+        'SPACE_ID' in os.environ,
         os.environ.get('STREAMLIT_RUNTIME_ENV') == 'cloud',
         'streamlit' in os.environ.get('HOME', '').lower(),
         'app' in os.environ.get('HOME', '').lower(),
-        'SPACE_ID' in os.environ,  # Hugging Face Spaces
         
-        # Heroku
+        # Other cloud platforms
         'DYNO' in os.environ,
-        
-        # Railway, Render, etc.
         'RAILWAY_ENVIRONMENT' in os.environ,
         'RENDER' in os.environ,
         
         # General cloud environment indicators
         '/tmp' in os.environ.get('HOME', ''),
         '/app' in os.environ.get('HOME', ''),
-        
-        # Check if localhost is not accessible (common in containers)
-        not os.path.exists('/dev/video0') if os.name != 'nt' else False,
     ]
     
-    return any(deployment_indicators)
+    # Enable webcam functionality - return False to allow webcam
+    return False
 
 def load_model():
     """Load the InsightFace model"""
@@ -347,7 +343,11 @@ def main():
         mode = st.sidebar.selectbox("Select Mode", ["Image Upload"])
         st.sidebar.info("ℹ️ Webcam mode is only available when running locally")
     else:
-        mode = st.sidebar.selectbox("Select Mode", ["Image Upload", "Webcam (Real-time)"])
+        mode = st.sidebar.selectbox("Select Mode", [
+            "Image Upload", 
+            "Camera Capture", 
+            "Webcam (Real-time)"
+        ])
     
     # Reset button
     if st.sidebar.button("Reset Statistics"):
@@ -396,6 +396,65 @@ def main():
                             with col_c:
                                 status = "STABLE" if face_data['is_stable'] else "LEARNING"
                                 st.metric("Status", f"{status} ({face_data['sample_count']}/15)")
+        
+        elif mode == "Camera Capture":
+            st.subheader("📷 Camera Capture")
+            
+            if st.session_state.model is None:
+                st.warning("Please load the model first using the sidebar.")
+            else:
+                st.info("📸 Click the camera button below to take a photo for age prediction")
+                
+                # Camera input
+                camera_photo = st.camera_input("Take a photo")
+                
+                if camera_photo is not None:
+                    # Convert the uploaded file to OpenCV format
+                    file_bytes = np.asarray(bytearray(camera_photo.read()), dtype=np.uint8)
+                    image = cv2.imdecode(file_bytes, 1)
+                    
+                    if image is not None:
+                        # Display the captured image
+                        st.image(camera_photo, caption="Captured Photo", use_column_width=True)
+                        
+                        # Process the image
+                        with st.spinner("Analyzing captured photo..."):
+                            faces = st.session_state.model.get(image)
+                            
+                            if len(faces) == 0:
+                                st.warning("No faces detected in the captured photo. Please try again.")
+                            else:
+                                st.success(f"Detected {len(faces)} face(s)")
+                                
+                                # Process each face
+                                for i, face in enumerate(faces):
+                                    age = face.age
+                                    gender = "Male" if face.sex == 1 else "Female"
+                                    bbox = face.bbox.astype(int)
+                                    
+                                    # Draw bounding box on image
+                                    result_image = image.copy()
+                                    cv2.rectangle(result_image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 2)
+                                    cv2.putText(result_image, f"Age: {int(age)}, {gender}", 
+                                              (bbox[0], bbox[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                                    
+                                    # Display results
+                                    st.subheader(f"Face {i+1} Analysis:")
+                                    col1, col2 = st.columns(2)
+                                    
+                                    with col1:
+                                        st.image(cv2.cvtColor(result_image, cv2.COLOR_BGR2RGB), 
+                                                caption=f"Face {i+1} with predictions", use_column_width=True)
+                                    
+                                    with col2:
+                                        st.metric("Predicted Age", f"{int(age)} years")
+                                        st.metric("Gender", gender)
+                                        
+                                        # Confidence indicator
+                                        confidence = min(100, bbox[2] - bbox[0])  # Use bbox width as confidence proxy
+                                        st.metric("Detection Confidence", f"{confidence:.1f}%")
+                    else:
+                        st.error("Failed to process the captured image. Please try again.")
         
         elif mode == "Webcam (Real-time)":
             st.subheader("📹 Real-time Webcam Analysis")
