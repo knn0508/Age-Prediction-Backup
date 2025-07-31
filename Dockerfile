@@ -29,9 +29,12 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with error handling
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    echo "Installing Python packages..." && \
+    pip install --no-cache-dir -r requirements.txt && \
+    echo "Python packages installed successfully" && \
+    pip cache purge
 
 # Copy application files
 COPY . .

@@ -1,0 +1,7 @@
+# Minimal requirements for troubleshooting
+streamlit
+opencv-python-headless
+insightface
+numpy
+pandas
+pillow
