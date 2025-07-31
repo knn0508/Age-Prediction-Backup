@@ -2,6 +2,23 @@
 
 ## Docker Build Issues
 
+### ❌ Problem: "error: command 'g++' failed: No such file or directory"
+**Cause**: Missing build tools required for compiling InsightFace from source.
+
+**Solutions**:
+1. **Use the updated Dockerfile** (already includes build tools):
+   ```dockerfile
+   RUN apt-get install -y build-essential g++ gcc cmake libopenblas-dev liblapack-dev
+   ```
+
+2. **Use pre-compiled approach** (rename Dockerfile.optimized to Dockerfile):
+   - Uses PyTorch CPU wheels to avoid compilation
+   - Installs InsightFace with `--no-build-isolation`
+
+3. **Use minimal approach** (rename Dockerfile.minimal to Dockerfile):
+   - Installs packages individually with fallback
+   - Shows error message if InsightFace fails
+
 ### ❌ Problem: "No matching distribution found for numpy==X.X.X"
 **Cause**: Package version doesn't exist or isn't compatible with the Python version.
 

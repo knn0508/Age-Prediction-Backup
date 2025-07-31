@@ -1,0 +1,45 @@
+# Minimal Dockerfile for quick deployment
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install only essential system packages
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages step by step to avoid build issues
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install core packages first
+RUN pip install --no-cache-dir streamlit==1.28.1
+RUN pip install --no-cache-dir opencv-python-headless==4.5.5.64
+RUN pip install --no-cache-dir numpy==1.21.6
+RUN pip install --no-cache-dir pandas==1.5.3
+RUN pip install --no-cache-dir pillow==9.5.0
+
+# Try to install InsightFace (fallback if this fails)
+RUN pip install --no-cache-dir insightface==0.7.3 || echo "InsightFace installation failed, app will show error message"
+
+# Copy application files
+COPY app.py .
+COPY start.sh .
+
+# Make startup script executable
+RUN chmod +x start.sh
+
+# Create non-root user
+RUN useradd -m -u 1000 user
+RUN chown -R user:user /app
+USER user
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+
+# Expose port
+EXPOSE 7860
+
+# Run the application
+CMD ["streamlit", "run", "app.py", "--server.port=7860", "--server.address=0.0.0.0", "--server.headless=true"]
