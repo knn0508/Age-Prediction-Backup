@@ -1,3 +1,22 @@
+---
+title: Age Detection App
+emoji: 👥
+colorFrom: blue
+colorTo: green
+sdk: streamlit
+sdk_version: 1.45.1
+app_file: app.py
+pinned: false
+license: mit
+short_description: AI-powered face age detection and analysis using InsightFace
+tags:
+  - computer-vision
+  - face-detection
+  - age-estimation
+  - streamlit
+  - insightface
+---
+
 # Age Detection Streamlit App
 
 A real-time age detection application built with Streamlit and InsightFace that can analyze faces from uploaded images.
